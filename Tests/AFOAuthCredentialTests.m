@@ -37,16 +37,16 @@
 - (void)testCredentialStorage {
     AFOAuthCredential *credential = [[AFOAuthCredential alloc] initWithOAuthToken:@"token" tokenType:@"Bearer"];
     NSString *identifier = [[NSUUID UUID] UUIDString];
-    XCTAssertTrue([AFOAuthCredential storeCredential:credential withIdentifier:identifier]);
+    XCTAssertTrue([AFOAuthCredential storeCredential:credential withIdentifier:identifier withAccessGroup:nil]);
 
     [credential setRefreshToken:@"updated_token" expiration:[NSDate distantFuture]];
-    XCTAssertTrue([AFOAuthCredential storeCredential:credential withIdentifier:identifier]);
+    XCTAssertTrue([AFOAuthCredential storeCredential:credential withIdentifier:identifier withAccessGroup:nil]);
 
-    AFOAuthCredential *retrievedCred = [AFOAuthCredential retrieveCredentialWithIdentifier:identifier];
+    AFOAuthCredential *retrievedCred = [AFOAuthCredential retrieveCredentialWithIdentifier:identifier withAccessGroup:nil];
     XCTAssertNotNil(retrievedCred);
 
     XCTAssertTrue([retrievedCred.refreshToken isEqualToString:credential.refreshToken]);
 
-    XCTAssertTrue([AFOAuthCredential deleteCredentialWithIdentifier:identifier]);
+    XCTAssertTrue([AFOAuthCredential deleteCredentialWithIdentifier:identifier withAccessGroup:nil]);
 }
 @end

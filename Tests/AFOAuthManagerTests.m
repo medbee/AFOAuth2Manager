@@ -69,7 +69,7 @@
 
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
-    [manager invalidateSessionCancelingTasks:YES];
+    [manager invalidateSessionCancelingTasks:YES resetSession:YES];
 }
 
 @end

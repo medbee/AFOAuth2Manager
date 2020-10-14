@@ -122,6 +122,10 @@ NS_ASSUME_NONNULL_BEGIN
 + (BOOL)storeCredential:(AFOAuthCredential *)credential
          withIdentifier:(NSString *)identifier;
 
++ (BOOL)storeCredential:(AFOAuthCredential *)credential
+         withIdentifier:(NSString *)identifier
+        withAccessGroup:(nullable NSString *)accessGroup;
+
 /**
  Stores the specified OAuth token for a given web service identifier in the Keychain.
 
@@ -135,6 +139,11 @@ NS_ASSUME_NONNULL_BEGIN
          withIdentifier:(NSString *)identifier
       withAccessibility:(id)securityAccessibility;
 
++ (BOOL)storeCredential:(AFOAuthCredential *)credential
+         withIdentifier:(NSString *)identifier
+      withAccessibility:(id)securityAccessibility
+        withAccessGroup:(nullable NSString *)accessGroup;
+
 /**
  Retrieves the OAuth credential stored with the specified service identifier from the Keychain.
 
@@ -144,6 +153,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (nullable AFOAuthCredential *)retrieveCredentialWithIdentifier:(NSString *)identifier;
 
++ (nullable AFOAuthCredential *)retrieveCredentialWithIdentifier:(NSString *)identifier withAccessGroup:(nullable NSString *)accessGroup;
+
 /**
  Deletes the OAuth credential stored with the specified service identifier from the Keychain.
 
@@ -152,6 +163,8 @@ NS_ASSUME_NONNULL_BEGIN
  @return Whether or not the credential was deleted from the keychain.
  */
 + (BOOL)deleteCredentialWithIdentifier:(NSString *)identifier;
+
++ (BOOL)deleteCredentialWithIdentifier:(NSString *)identifier withAccessGroup:(nullable NSString *)accessGroup;
 
 @end
 
