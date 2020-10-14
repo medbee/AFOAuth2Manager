@@ -24,14 +24,20 @@
 
 NSString * const kAFOAuth2CredentialServiceName = @"AFOAuthCredentialService";
 
-static NSDictionary * AFKeychainQueryDictionaryWithIdentifier(NSString *identifier) {
+static NSDictionary * AFKeychainQueryDictionaryWithIdentifier(NSString *identifier, NSString *accessGroup) {
     NSCParameterAssert(identifier);
 
-    return @{
-             (__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
-             (__bridge id)kSecAttrService: kAFOAuth2CredentialServiceName,
-             (__bridge id)kSecAttrAccount: identifier
-             };
+    NSMutableDictionary *dict = @{
+        (__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
+        (__bridge id)kSecAttrService: kAFOAuth2CredentialServiceName,
+        (__bridge id)kSecAttrAccount: identifier
+    }.mutableCopy;
+
+    if (accessGroup) {
+        dict[(__bridge id)kSecAttrAccessGroup] = accessGroup;
+    }
+
+    return dict;
 }
 
 @interface AFOAuthCredential()
@@ -100,6 +106,13 @@ static NSDictionary * AFKeychainQueryDictionaryWithIdentifier(NSString *identifi
 + (BOOL)storeCredential:(AFOAuthCredential *)credential
          withIdentifier:(NSString *)identifier
 {
+    return [self storeCredential:credential withIdentifier:identifier withAccessGroup:nil];
+}
+
++ (BOOL)storeCredential:(AFOAuthCredential *)credential
+         withIdentifier:(NSString *)identifier
+        withAccessGroup:(NSString *)accessGroup
+{
     id securityAccessibility = nil;
 #if (defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 43000) || (defined(__MAC_OS_X_VERSION_MAX_ALLOWED) && __MAC_OS_X_VERSION_MAX_ALLOWED >= 1090)
 #pragma clang diagnostic push
@@ -110,14 +123,22 @@ static NSDictionary * AFKeychainQueryDictionaryWithIdentifier(NSString *identifi
 #pragma clang diagnostic pop
 #endif
 
-    return [[self class] storeCredential:credential withIdentifier:identifier withAccessibility:securityAccessibility];
+    return [[self class] storeCredential:credential withIdentifier:identifier withAccessibility:securityAccessibility withAccessGroup:accessGroup];
 }
 
 + (BOOL)storeCredential:(AFOAuthCredential *)credential
          withIdentifier:(NSString *)identifier
       withAccessibility:(id)securityAccessibility
 {
-    NSMutableDictionary *queryDictionary = [AFKeychainQueryDictionaryWithIdentifier(identifier) mutableCopy];
+    return [self storeCredential:credential withIdentifier:identifier withAccessGroup:securityAccessibility];
+}
+
++ (BOOL)storeCredential:(AFOAuthCredential *)credential
+         withIdentifier:(NSString *)identifier
+      withAccessibility:(id)securityAccessibility
+        withAccessGroup:(NSString *)accessGroup
+{
+    NSMutableDictionary *queryDictionary = [AFKeychainQueryDictionaryWithIdentifier(identifier, accessGroup) mutableCopy];
 
     NSMutableDictionary *updateDictionary = [NSMutableDictionary dictionary];
     updateDictionary[(__bridge id)kSecValueData] = [NSKeyedArchiver archivedDataWithRootObject:credential];
@@ -127,7 +148,7 @@ static NSDictionary * AFKeychainQueryDictionaryWithIdentifier(NSString *identifi
     }
 
     OSStatus status;
-    BOOL exists = ([self retrieveCredentialWithIdentifier:identifier] != nil);
+    BOOL exists = ([self retrieveCredentialWithIdentifier:identifier withAccessGroup:accessGroup] != nil);
 
     if (exists) {
         status = SecItemUpdate((__bridge CFDictionaryRef)queryDictionary, (__bridge CFDictionaryRef)updateDictionary);
@@ -140,7 +161,11 @@ static NSDictionary * AFKeychainQueryDictionaryWithIdentifier(NSString *identifi
 }
 
 + (BOOL)deleteCredentialWithIdentifier:(NSString *)identifier {
-    NSMutableDictionary *queryDictionary = [AFKeychainQueryDictionaryWithIdentifier(identifier) mutableCopy];
+    return [self deleteCredentialWithIdentifier:identifier withAccessGroup:nil];
+}
+
++ (BOOL)deleteCredentialWithIdentifier:(NSString *)identifier withAccessGroup:(NSString *)accessGroup {
+    NSMutableDictionary *queryDictionary = [AFKeychainQueryDictionaryWithIdentifier(identifier, accessGroup) mutableCopy];
 
     OSStatus status = SecItemDelete((__bridge CFDictionaryRef)queryDictionary);
 
@@ -148,7 +173,11 @@ static NSDictionary * AFKeychainQueryDictionaryWithIdentifier(NSString *identifi
 }
 
 + (AFOAuthCredential *)retrieveCredentialWithIdentifier:(NSString *)identifier {
-    NSMutableDictionary *queryDictionary = [AFKeychainQueryDictionaryWithIdentifier(identifier) mutableCopy];
+    return [self retrieveCredentialWithIdentifier:identifier withAccessGroup:nil];
+}
+
++ (AFOAuthCredential *)retrieveCredentialWithIdentifier:(NSString *)identifier withAccessGroup:(NSString *)accessGroup {
+    NSMutableDictionary *queryDictionary = [AFKeychainQueryDictionaryWithIdentifier(identifier, accessGroup) mutableCopy];
     queryDictionary[(__bridge id)kSecReturnData] = (__bridge id)kCFBooleanTrue;
     queryDictionary[(__bridge id)kSecMatchLimit] = (__bridge id)kSecMatchLimitOne;
 
